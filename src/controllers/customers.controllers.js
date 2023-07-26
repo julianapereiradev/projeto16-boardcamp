@@ -1,47 +1,34 @@
 import { db } from "../database/database.connection.js";
 
-// Função para converter uma data para o formato 'YYYY-MM-DD'
-// function formatDate(date) {
-//     const year = date.getUTCFullYear();
-//     const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-//     const day = String(date.getUTCDate()).padStart(2, '0');
-//     return `${year}-${month}-${day}`;
-//   }
-
-
-// export async function getCustomers(req, res){
-
-//     try {
-//         const customers = await db.query(`SELECT * FROM customers;`);
-
-// // Formatando o birthday antes de enviar como resposta
-//     const formattedCustomers = customers.rows.map(customer => {
-//         return {
-//           ...customer,
-//           birthday: formatDate(customer.birthday),
-//         };
-//       });
-//       res.send(formattedCustomers);
-
-//       } catch (err) {
-//         return res.status(500).send(err.message)
-//       }
-
-// }
+//Função para converter uma data para o formato 'YYYY-MM-DD'
+function formatDate(date) {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
 
 export async function getCustomers(req, res){
 
-  try {
-      const customers = await db.query(`SELECT * FROM customers;`);
+    try {
+        const customers = await db.query(`SELECT * FROM customers;`);
 
-    res.send(customers.rows);
+// Formatando o birthday antes de enviar como resposta
+    const formattedCustomers = customers.rows.map(customer => {
+        return {
+          ...customer,
+          birthday: formatDate(customer.birthday),
+        };
+      });
+      res.send(formattedCustomers);
 
-    } catch (err) {
-      return res.status(500).send(err.message)
-    }
+      } catch (err) {
+        return res.status(500).send(err.message)
+      }
 
 }
+
 
 export async function postCustomer(req, res) {
 
