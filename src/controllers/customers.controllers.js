@@ -22,7 +22,6 @@ export async function getCustomers(req, res){
         };
       });
       res.send(formattedCustomers);
-
       } catch (err) {
         return res.status(500).send(err.message)
       }
@@ -54,25 +53,29 @@ export async function postCustomer(req, res) {
 }
 
 export async function getCustomerId(req, res) {
-  const {id} = req.params;
+  const { id } = req.params;
 
   try {
-
     const idExistQuery = await db.query(`SELECT * FROM customers WHERE id = $1;`, [id]);
-      
+
     if (idExistQuery.rows.length === 0) {
       return res.status(404).send("Este id não existe no banco de clientes");
     }
 
-    const customerId = await db.query(`
-    SELECT * FROM customers WHERE id=$1;`, [id]
-    )
-    res.send(customerId.rows[0]);
-    
+    const customerId = await db.query(`SELECT * FROM customers WHERE id=$1;`, [id]);
+
+    // Formatando o birthday antes de enviar como resposta
+    const formattedCustomerId = {
+      ...customerId.rows[0],
+      birthday: formatDate(new Date(customerId.rows[0].birthday)),
+    };
+
+    res.send(formattedCustomerId);
   } catch (err) {
-    return res.status(500).send(err.message)
+    return res.status(500).send(err.message);
   }
 }
+
 
 export async function updateCustomer(req, res){
   const {id} = req.params;
