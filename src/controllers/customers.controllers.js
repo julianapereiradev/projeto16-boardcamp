@@ -29,6 +29,20 @@ export async function getCustomers(req, res){
 
 }
 
+
+// export async function getCustomers(req, res){
+
+//   try {
+//       const customers = await db.query(`SELECT * FROM customers;`);
+
+//     res.send(customers.rows);
+
+//     } catch (err) {
+//       return res.status(500).send(err.message)
+//     }
+
+// }
+
 export async function postCustomer(req, res) {
 
     const { name, phone, cpf, birthday } = req.body;
@@ -39,13 +53,13 @@ export async function postCustomer(req, res) {
       if (cpfExistQuery.rows.length > 0) {
         return res.status(409).send("Este cpf já existe no banco de clientes");
       }
-     
-     await db.query(`
-     INSERT INTO customers (name, phone, cpf, birthday)
-     VALUES($1, $2, $3, $4)
-     `,
-     [name, phone, cpf, birthday]);
-  
+    
+      const formattedBirthday = formatDate(new Date(birthday)); // Format the birthday here
+
+      await db.query(
+        `INSERT INTO customers (name, phone, cpf, birthday) VALUES ($1, $2, $3, $4)`,
+        [name, phone, cpf, formattedBirthday] // Use the formattedBirthday variable here
+      );
      res.sendStatus(201)
     
     } catch (err) {
