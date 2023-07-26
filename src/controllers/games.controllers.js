@@ -1,26 +1,9 @@
+import { db } from "../database/database.connection.js";
+
 export async function getGames(req, res) {
   try {
-    //chamar pelo banco que tem o nome de todos os jogos
-    // colocar res.send(nome_do_banco_jogos)
-  
-    // Tem que vir no formato:
-    // [
-    //   {
-    //     id: 1,
-    //     name: 'Banco Imobiliário',
-    //     image: 'http://',
-    //     stockTotal: 3,
-    //     pricePerDay: 1500
-    //   },
-    //   {
-    //     id: 2,
-    //     name: 'Detetive',
-    //     image: 'http://',
-    //     stockTotal: 1,
-    //     pricePerDay: 2500
-    //   },
-    // ]
-  
+    const games = await db.query(`SELECT * FROM games;`);
+    res.send(games.rows);
   } catch (err) {
     return res.status(500).send(err.message)
   }
@@ -30,19 +13,20 @@ export async function postGame(req, res) {
   const { name, image, stockTotal, pricePerDay } = req.body;
 
   try {
-   if('') {
- //ver se o nome_do_jogo já está no banco, se estiver, retornar status 409 
-   }
+    const nameExistQuery = await db.query(`SELECT * FROM games WHERE name = $1;`, [name]);
+    
+    if (nameExistQuery.rows.length > 0) {
+      return res.status(409).send("Este nome de jogo já existe no banco de jogos");
+    }
    
-  //Chamar o banco com o nome que tem todos os jogos e add nele esse objeto INSERT({value: value.....}) 
-   res
-      .status(201)
-      .send({
-        name: name,
-        image: image,
-        stockTotal: stockTotal,
-        pricePerDay: pricePerDay,
-      }); //se der certo é só para responder com 201 e nada mais
+   await db.query(`
+   INSERT INTO games (name, image, "stockTotal", "pricePerDay")
+   VALUES($1, $2, $3, $4)
+   `,
+   [name, image, stockTotal, pricePerDay]);
+
+   res.sendStatus(201)
+  
   } catch (err) {
     return res.status(500).send(err.message);
   }
