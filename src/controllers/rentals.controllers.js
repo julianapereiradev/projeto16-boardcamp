@@ -58,10 +58,12 @@ export async function postRental(req, res) {
 
       const rentDate = dayjs().format("YYYY-MM-DD");
       const originalPrice = daysRented * game.pricePerDay;
+      const returnDate = null;
+      const delayFee = null;
 
       await db.query(
-        `INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "originalPrice") VALUES ($1, $2, $3, $4, $5)`,
-        [customerId, gameId, rentDate, daysRented, originalPrice]
+        `INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [customerId, gameId, rentDate, daysRented, returnDate, originalPrice, delayFee]
       );
 
       await db.query(`UPDATE games SET "stockTotal" = "stockTotal" - 1 WHERE id = $1;`, [gameId]);
