@@ -57,6 +57,16 @@ export async function postRental(req, res) {
 
       const game = gameIdExistQuery.rows[0];
 
+      const counting = await db.query(`SELECT COUNT(*) AS open_rentals FROM rentals WHERE "gameId" = $1 AND "returnDate" IS NULL;`, [gameId]);
+
+        const numberRentalsOpen = Number(counting.rows[0].open_rentals);
+        const totalStockGame = game.stockTotal;
+        const availableGames = totalStockGame - numberRentalsOpen;
+
+        if (availableGames <= 0) {
+            return res.status(400).send("Jogo não está disponíveis para ser alugado.");
+        }
+
       const rentDate = dayjs().format("YYYY-MM-DD");
       const originalPrice = daysRented * game.pricePerDay;
       const returnDate = null;
