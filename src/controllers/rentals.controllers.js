@@ -1,6 +1,15 @@
 import { db } from "../database/database.connection.js";
 import dayjs from "dayjs";
 
+function formatDate(date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+
+
 export async function getRentals(req, res){
   try {
 
@@ -87,8 +96,46 @@ export async function postRental(req, res) {
 
 }
 
-export async function sendFinalRental(req, res){
+export async function sendFinalRental(req, res) {
+  const { id } = req.params;
 
+  try {
+    const rentalExist = await db.query(`SELECT * FROM rentals WHERE id = $1;`, [id]);
+    const game = await db.query(`SELECT "pricePerDay" FROM games WHERE id = ${rentalExist.rows[0].gameId}`);
+    
+    if (rentalExist.rows.length === 0) {
+      return res.status(404).send("Este id não existe no banco de clientes");
+    }
+
+    if (rentalExist.rows[0].returnDate !== null) {
+      return res.status(400).send("Não é possível porque o cliente já devolveu o jogo");
+    }
+
+    const differenceDays = rentalExist.rows[0].returnDate - rentalExist.rows[0].rentDate;
+    const diffInDays = Math.ceil(differenceDays / (1000 * 60 * 60 * 24));
+    
+    const isdelayFee = diffInDays - rentalExist.rows[0].daysRented;
+    
+    let totalvalueFee = 0;
+    if (isdelayFee > 0) {
+      totalvalueFee = Math.abs(isdelayFee) * game.rows[0].pricePerDay;
+    }
+
+    const delayFee = totalvalueFee;
+    const returnDate = formatDate(new Date());
+
+    await db.query(`
+      UPDATE rentals 
+      SET "returnDate" = $1, "delayFee" = $2 
+      WHERE id = $3
+      ;`, [returnDate, delayFee, id]);
+
+    await db.query(`UPDATE games SET "stockTotal" = "stockTotal" + 1 WHERE id = ${rentalExist.rows[0].gameId};`);
+
+    res.sendStatus(201);
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
 }
 
 export async function deleteRental(req, res) {
