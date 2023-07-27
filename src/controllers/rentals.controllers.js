@@ -57,10 +57,6 @@ export async function postRental(req, res) {
 
       const game = gameIdExistQuery.rows[0];
 
-      if (daysRented > game.stockTotal) {
-        return res.status(400).send("Não tem mais no estoque");
-      }
-
       const rentDate = dayjs().format("YYYY-MM-DD");
       const originalPrice = daysRented * game.pricePerDay;
       const returnDate = null;
