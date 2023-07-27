@@ -91,6 +91,24 @@ export async function sendFinalRental(req, res){
 
 }
 
-export async function deleteRental(req, res){
+export async function deleteRental(req, res) {
+  const { id } = req.params;
 
+  try {
+    const rentalExist = await db.query(`SELECT * FROM rentals WHERE id = $1;`, [id]);
+
+    if (rentalExist.rows.length === 0) {
+      return res.status(404).send("Este id não existe no banco de clientes");
+    }
+
+    if(rentalExist.rows[0].returnDate === null) {
+      return res.status(400).send("Não é possível excluir o aluguel porque o cliente ainda não devolveu o jogo")
+    }
+
+    await db.query(`DELETE FROM rentals WHERE id = $1;`,[id]);
+
+    res.status(200).send("Aluguel Deletado");
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
 }
