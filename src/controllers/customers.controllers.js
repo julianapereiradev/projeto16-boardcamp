@@ -1,32 +1,24 @@
 import { db } from "../database/database.connection.js";
-
-//Função para converter uma data para o formato 'YYYY-MM-DD'
-function formatDate(date) {
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-
-export async function getCustomers(req, res){
-
+ 
+  export async function getCustomers(req, res) {
     try {
-        const customers = await db.query(`SELECT * FROM customers;`);
-
-// Formatando o birthday antes de enviar como resposta
-    const formattedCustomers = customers.rows.map(customer => {
-        return {
-          ...customer,
-          birthday: formatDate(customer.birthday),
-        };
-      });
+      const customersQuery = await db.query(`
+        SELECT
+          id,
+          name,
+          phone,
+          cpf,
+          TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday
+        FROM customers;
+      `);
+  
+      const formattedCustomers = customersQuery.rows;
       res.send(formattedCustomers);
-      } catch (err) {
-        return res.status(500).send(err.message)
-      }
-
-}
+    } catch (err) {
+      return res.status(500).send(err.message);
+    }
+  }
+  
 
 
 export async function postCustomer(req, res) {
@@ -56,20 +48,19 @@ export async function getCustomerId(req, res) {
   const { id } = req.params;
 
   try {
-    const idExistQuery = await db.query(`SELECT * FROM customers WHERE id = $1;`, [id]);
+    const customerIdQuery = await db.query(`
+      SELECT
+        *,
+        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday
+      FROM customers
+      WHERE id = $1;
+    `, [id]);
 
-    if (idExistQuery.rows.length === 0) {
+    if (customerIdQuery.rows.length === 0) {
       return res.status(404).send("Este id não existe no banco de clientes");
     }
 
-    const customerId = await db.query(`SELECT * FROM customers WHERE id=$1;`, [id]);
-
-    // Formatando o birthday antes de enviar como resposta
-    const formattedCustomerId = {
-      ...customerId.rows[0],
-      birthday: formatDate(new Date(customerId.rows[0].birthday)),
-    };
-
+    const formattedCustomerId = customerIdQuery.rows[0];
     res.send(formattedCustomerId);
   } catch (err) {
     return res.status(500).send(err.message);
