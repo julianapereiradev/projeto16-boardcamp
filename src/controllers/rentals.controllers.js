@@ -50,13 +50,22 @@ export async function postRental(req, res) {
         return res.status(400).send("Este id de jogo não existe no banco de clientes");
       }
 
+      const game = gameIdExistQuery.rows[0];
+
+      if (game.stockTotal <= 0) {
+        return res.status(400).send("Não tem mais no estoque");
+      }
+
       const rentDate = dayjs().format("YYYY-MM-DD");
-      const originalPrice = daysRented
+      const originalPrice = daysRented * game.pricePerDay;
 
       await db.query(
         `INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "originalPrice") VALUES ($1, $2, $3, $4, $5)`,
         [customerId, gameId, rentDate, daysRented, originalPrice]
       );
+
+      await db.query(`UPDATE games SET "stockTotal" = "stockTotal" - 1 WHERE id = $1;`, [gameId]);
+
      res.sendStatus(201)
     
     } catch (err) {
