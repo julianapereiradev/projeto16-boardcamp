@@ -132,7 +132,7 @@ export async function sendFinalRental(req, res) {
 
     await db.query(`UPDATE games SET "stockTotal" = "stockTotal" + 1 WHERE id = ${rentalExist.rows[0].gameId};`);
 
-    res.sendStatus(201);
+    res.sendStatus(200);
   } catch (err) {
     return res.status(500).send(err.message);
   }
