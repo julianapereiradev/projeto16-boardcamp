@@ -118,7 +118,7 @@ export async function sendFinalRental(req, res) {
     const differenceDays = Math.abs(dateReturn - dateSend); 
     const diffInDays = Math.ceil(differenceDays / (1000 * 60 * 60 * 24)); 
     
-    const isdelayFee = diffInDays - rentalExist.rows[0].daysRented;
+    const isdelayFee = diffInDays - rentalExist.rows[0].daysRented - 1;
     
     let totalvalueFee = 0;
     if (isdelayFee > 0) {
