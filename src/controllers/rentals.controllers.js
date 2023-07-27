@@ -101,11 +101,12 @@ export async function sendFinalRental(req, res) {
 
   try {
     const rentalExist = await db.query(`SELECT * FROM rentals WHERE id = $1;`, [id]);
-    const game = await db.query(`SELECT "pricePerDay" FROM games WHERE id = ${rentalExist.rows[0].gameId}`);
     
     if (rentalExist.rows.length === 0) {
       return res.status(404).send("Este id não existe no banco de clientes");
     }
+    
+    const game = await db.query(`SELECT "pricePerDay" FROM games WHERE id = ${rentalExist.rows[0].gameId}`);
 
     if (rentalExist.rows[0].returnDate !== null) {
       return res.status(400).send("Não é possível porque o cliente já devolveu o jogo");
