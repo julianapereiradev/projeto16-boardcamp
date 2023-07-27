@@ -40,6 +40,11 @@ export async function postRental(req, res) {
     const { customerId, gameId, daysRented } = req.body;
 
     try {
+
+      if(daysRented <= 0) {
+        return res.sendStatus(400);
+      }
+
       const customerIdExistQuery = await db.query(`SELECT * FROM customers WHERE id = $1;`, [customerId]);
       if (customerIdExistQuery.rows.length === 0) {
         return res.status(400).send("Este id de cliente não existe no banco de clientes");
@@ -52,7 +57,7 @@ export async function postRental(req, res) {
 
       const game = gameIdExistQuery.rows[0];
 
-      if (game.stockTotal <= 0) {
+      if (daysRented > game.stockTotal) {
         return res.status(400).send("Não tem mais no estoque");
       }
 
