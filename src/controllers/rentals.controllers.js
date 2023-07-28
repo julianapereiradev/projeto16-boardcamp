@@ -1,109 +1,65 @@
 import { db } from "../database/database.connection.js";
 import dayjs from "dayjs";
 
+function mapRentalData(rental) {
+  return {
+    id: rental.id,
+    customerId: rental.customerId,
+    gameId: rental.gameId,
+    rentDate: rental.rentDate,
+    daysRented: rental.daysRented,
+    returnDate: rental.returnDate,
+    originalPrice: rental.originalPrice,
+    delayFee: rental.delayFee,
+    customer: {
+      id: rental.customerId,
+      name: rental.customerName,
+    },
+    game: {
+      id: rental.gameId,
+      name: rental.gameName,
+    },
+  };
+}
 
-export async function getRentals(req, res){
+
+export async function getRentals(req, res) {
 
     const {customerId, gameId} = req.query;
 
   try {
+    let query = `SELECT rentals.*, 
+    TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
+    TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
+    customers."name" as "customerName", 
+    games."name" as "gameName"
+    FROM rentals
+    JOIN customers ON rentals."customerId" = customers."id" 
+    JOIN games ON rentals."gameId" = games."id"`
 
     if(customerId) {
-      const filteredCustomerId = await db.query(`
-      SELECT rentals.*, 
-      TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
-      TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
-      customers."name" as "customerName", 
-      games."name" as "gameName"
-      FROM rentals
-      JOIN customers ON rentals."customerId" = customers."id" 
-      JOIN games ON rentals."gameId" = games."id"
-      WHERE "customerId" = $1;`, [customerId]);
-     
-      const resultCustomerId = filteredCustomerId.rows.map((rental) => ({
-        id: rental.id,
-        customerId: rental.customerId,
-        gameId: rental.gameId,
-        rentDate: rental.rentDate,
-        daysRented: rental.daysRented,
-        returnDate: rental.returnDate,
-        originalPrice: rental.originalPrice,
-        delayFee: rental.delayFee,
-        customer: {
-          id: rental.customerId,
-          name: rental.customerName,
-        },
-        game: {
-          id: rental.gameId,
-          name: rental.gameName,
-        },
-      }));
-      res.send(resultCustomerId);
-
-    } else if (gameId) {
-      const filteredGameId = await db.query(`
-      SELECT rentals.*, 
-      TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
-      TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
-      customers."name" as "customerName", 
-      games."name" as "gameName"
-      FROM rentals
-      JOIN customers ON rentals."customerId" = customers."id" 
-      JOIN games ON rentals."gameId" = games."id"
-      WHERE "gameId" = $1;`, [gameId]);
       
-      const resultGameId = filteredGameId.rows.map((rental) => ({
-        id: rental.id,
-        customerId: rental.customerId,
-        gameId: rental.gameId,
-        rentDate: rental.rentDate,
-        daysRented: rental.daysRented,
-        returnDate: rental.returnDate,
-        originalPrice: rental.originalPrice,
-        delayFee: rental.delayFee,
-        customer: {
-          id: rental.customerId,
-          name: rental.customerName,
-        },
-        game: {
-          id: rental.gameId,
-          name: rental.gameName,
-        },
-      }));
-      res.send(resultGameId);
+      query += ` WHERE "customerId" = '${customerId}'`;
+      const resultCustomerId = await db.query(query);
 
-    } else {
-      const rentalsQuery = await db.query(`
-      SELECT rentals.*, 
-      TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
-      TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
-      customers."name" as "customerName", 
-      games."name" as "gameName"
-      FROM rentals
-      JOIN customers ON rentals."customerId" = customers."id" 
-      JOIN games ON rentals."gameId" = games."id";
-      `);
-    
-    const rentals = rentalsQuery.rows.map((rental) => ({
-      id: rental.id,
-      customerId: rental.customerId,
-      gameId: rental.gameId,
-      rentDate: rental.rentDate,
-      daysRented: rental.daysRented,
-      returnDate: rental.returnDate,
-      originalPrice: rental.originalPrice,
-      delayFee: rental.delayFee,
-      customer: {
-        id: rental.customerId,
-        name: rental.customerName,
-      },
-      game: {
-        id: rental.gameId,
-        name: rental.gameName,
-      },
-    }));
-    res.send(rentals);
+      const rentalsCustomer = resultCustomerId.rows.map(mapRentalData);
+      return res.send(rentalsCustomer);
+
     }
+
+    if (gameId) {
+
+      query += ` WHERE "gameId" = '${gameId}'`;
+      const resultGameId = await db.query(query);
+      
+      const rentalsGame = resultGameId.rows.map(mapRentalData);
+      return res.send(rentalsGame);
+    }
+
+    const rentalsQuery = await db.query(query);
+    const rentals = rentalsQuery.rows.map(mapRentalData);
+    res.send(rentals);
+
   } catch (err) {
     return res.status(500).send(err.message)
   }
