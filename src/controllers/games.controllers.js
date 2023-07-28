@@ -1,13 +1,23 @@
 import { db } from "../database/database.connection.js";
 
 export async function getGames(req, res) {
+  const { name } = req.query;
+  
   try {
-    const games = await db.query(`SELECT * FROM games;`);
-    res.send(games.rows);
+
+    if (name) {
+      const filteredGames = await db.query(`SELECT * FROM games WHERE name ILIKE $1;`, [`${name}%`]);
+      res.send(filteredGames.rows);
+
+    } else {
+      const games = await db.query( `SELECT * FROM games;`);
+      res.send(games.rows);
+    }
   } catch (err) {
     return res.status(500).send(err.message)
   }
 };
+
 
 export async function postGame(req, res) {
   const { name, image, stockTotal, pricePerDay } = req.body;
