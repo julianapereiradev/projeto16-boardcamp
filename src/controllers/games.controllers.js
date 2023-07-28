@@ -1,22 +1,29 @@
 import { db } from "../database/database.connection.js";
 
 export async function getGames(req, res) {
-  const { name } = req.query;
-  
+  const { name, offset, limit } = req.query;
+
   try {
+    let query = "SELECT * FROM games";
 
     if (name) {
-      const filteredGames = await db.query(`SELECT * FROM games WHERE name ILIKE $1;`, [`${name}%`]);
-      res.send(filteredGames.rows);
-
-    } else {
-      const games = await db.query( `SELECT * FROM games;`);
-      res.send(games.rows);
+      query += ` WHERE name ILIKE '${name}%'`;
     }
+
+    if (offset && !isNaN(parseInt(offset))) {
+      query += ` OFFSET ${parseInt(offset)}`;
+    }
+
+    if (limit && !isNaN(parseInt(limit))) {
+      query += ` LIMIT ${parseInt(limit)}`;
+    }
+
+    const games = await db.query(query);
+    res.send(games.rows);
   } catch (err) {
-    return res.status(500).send(err.message)
+    return res.status(500).send(err.message);
   }
-};
+}
 
 
 export async function postGame(req, res) {
