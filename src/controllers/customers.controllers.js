@@ -7,7 +7,15 @@ import { db } from "../database/database.connection.js";
     try {
 
       if(cpf) {
-        const filteredCpf = await db.query(`SELECT * FROM customers WHERE cpf ILIKE $1;`,[`${cpf}%`]);
+        const filteredCpf = await db.query(`
+        SELECT 
+        id,
+        name,
+        phone,
+        cpf,
+        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday
+        FROM customers 
+        WHERE cpf ILIKE $1;`,[`${cpf}%`]);
         res.send(filteredCpf.rows)
 
       } else {

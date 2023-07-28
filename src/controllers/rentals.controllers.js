@@ -9,22 +9,42 @@ export async function getRentals(req, res){
   try {
 
     if(customerId) {
-      const filteredCustomerId = await db.query(`SELECT * FROM rentals WHERE "customerId" = $1;`, [customerId]);
+      const filteredCustomerId = await db.query(`
+      SELECT rentals.*, 
+      TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
+      TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
+      customers."name" as "customerName", 
+      games."name" as "gameName"
+      FROM rentals
+      JOIN customers ON rentals."customerId" = customers."id" 
+      JOIN games ON rentals."gameId" = games."id"
+      WHERE "customerId" = $1;`, [customerId]);
       res.send(filteredCustomerId.rows);
+
     } else if (gameId) {
-      const filteredGameId = await db.query(`SELECT * FROM rentals WHERE "gameId" = $1;`, [gameId]);
+      const filteredGameId = await db.query(`
+      SELECT rentals.*, 
+      TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
+      TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
+      customers."name" as "customerName", 
+      games."name" as "gameName"
+      FROM rentals
+      JOIN customers ON rentals."customerId" = customers."id" 
+      JOIN games ON rentals."gameId" = games."id"
+      WHERE "gameId" = $1;`, [gameId]);
       res.send(filteredGameId.rows);
+
     } else {
       const rentalsQuery = await db.query(`
-    SELECT rentals.*, 
-    TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
-    TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
-    customers."name" as "customerName", 
-    games."name" as "gameName"
-    FROM rentals
-    JOIN customers ON rentals."customerId" = customers."id" 
-    JOIN games ON rentals."gameId" = games."id";
-  `);
+      SELECT rentals.*, 
+      TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
+      TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
+      customers."name" as "customerName", 
+      games."name" as "gameName"
+      FROM rentals
+      JOIN customers ON rentals."customerId" = customers."id" 
+      JOIN games ON rentals."gameId" = games."id";
+      `);
     
     const rentals = rentalsQuery.rows.map((rental) => ({
       id: rental.id,
