@@ -25,7 +25,7 @@ function mapRentalData(rental) {
 
 export async function getRentals(req, res) {
 
-    const {customerId, gameId} = req.query;
+    const {customerId, gameId, offset, limit} = req.query;
 
   try {
     let query = `SELECT rentals.*, 
@@ -37,23 +37,28 @@ export async function getRentals(req, res) {
     JOIN customers ON rentals."customerId" = customers."id" 
     JOIN games ON rentals."gameId" = games."id"`
 
-    if(customerId) {
-      
+    if(customerId) { 
       query += ` WHERE "customerId" = '${customerId}'`;
       const resultCustomerId = await db.query(query);
 
       const rentalsCustomer = resultCustomerId.rows.map(mapRentalData);
       return res.send(rentalsCustomer);
-
     }
 
     if (gameId) {
-
       query += ` WHERE "gameId" = '${gameId}'`;
       const resultGameId = await db.query(query);
       
       const rentalsGame = resultGameId.rows.map(mapRentalData);
       return res.send(rentalsGame);
+    }
+
+    if(offset && !isNaN(parseInt(offset))) {
+      query += ` OFFSET ${parseInt(offset)}`
+    }
+
+    if(limit && !isNaN(parseInt(limit))) {
+      query += ` LIMIT ${parseInt(limit)}`
     }
 
     const rentalsQuery = await db.query(query);
