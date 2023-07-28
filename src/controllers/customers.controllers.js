@@ -1,8 +1,17 @@
 import { db } from "../database/database.connection.js";
  
   export async function getCustomers(req, res) {
+
+    const {cpf} = req.query;
+
     try {
-      const customersQuery = await db.query(`
+
+      if(cpf) {
+        const filteredCpf = await db.query(`SELECT * FROM customers WHERE cpf ILIKE $1;`,[`${cpf}%`]);
+        res.send(filteredCpf.rows)
+
+      } else {
+        const customersQuery = await db.query(`
         SELECT
           id,
           name,
@@ -11,9 +20,9 @@ import { db } from "../database/database.connection.js";
           TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday
         FROM customers;
       `);
-  
-      const formattedCustomers = customersQuery.rows;
-      res.send(formattedCustomers);
+      const customers = customersQuery.rows;
+      res.send(customers);
+      }
     } catch (err) {
       return res.status(500).send(err.message);
     }
