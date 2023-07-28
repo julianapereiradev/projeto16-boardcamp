@@ -3,9 +3,19 @@ import dayjs from "dayjs";
 
 
 export async function getRentals(req, res){
+
+    const {customerId, gameId} = req.query;
+
   try {
 
-    const rentalsQuery = await db.query(`
+    if(customerId) {
+      const filteredCustomerId = await db.query(`SELECT * FROM rentals WHERE "customerId" = $1;`, [customerId]);
+      res.send(filteredCustomerId.rows);
+    } else if (gameId) {
+      const filteredGameId = await db.query(`SELECT * FROM rentals WHERE "gameId" = $1;`, [gameId]);
+      res.send(filteredGameId.rows);
+    } else {
+      const rentalsQuery = await db.query(`
     SELECT rentals.*, 
     TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
     TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
@@ -35,6 +45,7 @@ export async function getRentals(req, res){
       },
     }));
     res.send(rentals);
+    }
   } catch (err) {
     return res.status(500).send(err.message)
   }
