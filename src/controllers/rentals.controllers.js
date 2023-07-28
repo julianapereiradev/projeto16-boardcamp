@@ -19,7 +19,26 @@ export async function getRentals(req, res){
       JOIN customers ON rentals."customerId" = customers."id" 
       JOIN games ON rentals."gameId" = games."id"
       WHERE "customerId" = $1;`, [customerId]);
-      res.send(filteredCustomerId.rows);
+     
+      const resultCustomerId = filteredCustomerId.rows.map((rental) => ({
+        id: rental.id,
+        customerId: rental.customerId,
+        gameId: rental.gameId,
+        rentDate: rental.rentDate,
+        daysRented: rental.daysRented,
+        returnDate: rental.returnDate,
+        originalPrice: rental.originalPrice,
+        delayFee: rental.delayFee,
+        customer: {
+          id: rental.customerId,
+          name: rental.customerName,
+        },
+        game: {
+          id: rental.gameId,
+          name: rental.gameName,
+        },
+      }));
+      res.send(resultCustomerId);
 
     } else if (gameId) {
       const filteredGameId = await db.query(`
@@ -32,7 +51,26 @@ export async function getRentals(req, res){
       JOIN customers ON rentals."customerId" = customers."id" 
       JOIN games ON rentals."gameId" = games."id"
       WHERE "gameId" = $1;`, [gameId]);
-      res.send(filteredGameId.rows);
+      
+      const resultGameId = filteredGameId.rows.map((rental) => ({
+        id: rental.id,
+        customerId: rental.customerId,
+        gameId: rental.gameId,
+        rentDate: rental.rentDate,
+        daysRented: rental.daysRented,
+        returnDate: rental.returnDate,
+        originalPrice: rental.originalPrice,
+        delayFee: rental.delayFee,
+        customer: {
+          id: rental.customerId,
+          name: rental.customerName,
+        },
+        game: {
+          id: rental.gameId,
+          name: rental.gameName,
+        },
+      }));
+      res.send(resultGameId);
 
     } else {
       const rentalsQuery = await db.query(`
