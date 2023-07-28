@@ -1,30 +1,26 @@
 import { db } from "../database/database.connection.js";
 import dayjs from "dayjs";
 
-function formatDate(date) {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-
 
 export async function getRentals(req, res){
   try {
 
     const rentalsQuery = await db.query(`
-      SELECT rentals.*, customers."name" as "customerName", 
-      games."name" as "gameName" from rentals 
-      JOIN customers ON rentals."customerId" = customers."id" 
-      JOIN games ON rentals."gameId" = games."id";
-    `);
+    SELECT rentals.*, 
+    TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
+    TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
+    customers."name" as "customerName", 
+    games."name" as "gameName"
+    FROM rentals
+    JOIN customers ON rentals."customerId" = customers."id" 
+    JOIN games ON rentals."gameId" = games."id";
+  `);
     
     const rentals = rentalsQuery.rows.map((rental) => ({
       id: rental.id,
       customerId: rental.customerId,
       gameId: rental.gameId,
-      rentDate: dayjs(rental.rentDate).format("YYYY-MM-DD"),
+      rentDate: rental.rentDate,
       daysRented: rental.daysRented,
       returnDate: rental.returnDate,
       originalPrice: rental.originalPrice,
@@ -126,13 +122,12 @@ export async function sendFinalRental(req, res) {
     }
 
     const delayFee = totalvalueFee;
-    const returnDate = formatDate(new Date());
 
     await db.query(`
-      UPDATE rentals 
-      SET "returnDate" = $1, "delayFee" = $2 
-      WHERE id = $3
-      ;`, [returnDate, delayFee, id]);
+    UPDATE rentals
+    SET "returnDate" = Now(), "delayFee" = $1
+    WHERE id = $2;
+  `, [delayFee, id]);
 
     await db.query(`UPDATE games SET "stockTotal" = "stockTotal" + 1 WHERE id = ${rentalExist.rows[0].gameId};`);
 
