@@ -4,7 +4,7 @@ export async function getGames(req, res) {
   const { name, offset, limit } = req.query;
 
   try {
-    let query = "SELECT * FROM games";
+    let query = `SELECT * FROM games`;
 
     if (name) {
       query += ` WHERE name ILIKE '${name}%'`;

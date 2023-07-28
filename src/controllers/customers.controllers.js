@@ -2,41 +2,31 @@ import { db } from "../database/database.connection.js";
  
   export async function getCustomers(req, res) {
 
-    const {cpf} = req.query;
+    const {cpf, offset, limit} = req.query;
 
     try {
+      let query = `SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers`
 
       if(cpf) {
-        const filteredCpf = await db.query(`
-        SELECT 
-        id,
-        name,
-        phone,
-        cpf,
-        TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday
-        FROM customers 
-        WHERE cpf ILIKE $1;`,[`${cpf}%`]);
-        res.send(filteredCpf.rows)
-
-      } else {
-        const customersQuery = await db.query(`
-        SELECT
-          id,
-          name,
-          phone,
-          cpf,
-          TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday
-        FROM customers;
-      `);
-      const customers = customersQuery.rows;
-      res.send(customers);
+        query += ` WHERE cpf ILIKE '${cpf}%'`;
       }
+
+      if(offset && !isNaN(parseInt(offset))) {
+        query += ` OFFSET ${parseInt(offset)}`
+      }
+
+      if(limit && !isNaN(parseInt(limit))) {
+        query += ` LIMIT ${parseInt(limit)}`
+      }
+
+        const customers = await db.query(query);
+        res.send(customers.rows);
+      
     } catch (err) {
       return res.status(500).send(err.message);
     }
   }
   
-
 
 export async function postCustomer(req, res) {
 
@@ -83,7 +73,6 @@ export async function getCustomerId(req, res) {
     return res.status(500).send(err.message);
   }
 }
-
 
 export async function updateCustomer(req, res){
   const {id} = req.params;
