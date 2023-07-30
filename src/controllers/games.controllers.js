@@ -1,13 +1,23 @@
 import { db } from "../database/database.connection.js";
 
 export async function getGames(req, res) {
-  const { name, offset, limit } = req.query;
+  const { name, offset, limit, order, desc } = req.query;
 
   try {
     let query = `SELECT * FROM games`;
 
     if (name) {
       query += ` WHERE name ILIKE '${name}%'`;
+    }
+
+    if (order) {
+      // Sanitize the 'order' parameter to prevent SQL injection
+      const sanitizedOrder = order === 'name' ? 'name' : 'id';
+      query += ` ORDER BY "${sanitizedOrder}"`;
+
+      if (desc === 'true') {
+        query += ` DESC`;
+      }
     }
 
     if (offset && !isNaN(parseInt(offset))) {
