@@ -54,15 +54,33 @@ export async function getRentals(req, res) {
     }
 
     if (order) {
-            
+      // Define a whitelist of allowed column names for sorting
+      const allowedColumns = [
+        "id",
+        "customerId",
+        "gameId",
+        "rentDate",
+        "daysRented",
+        "returnDate",
+        "originalPrice",
+        "delayFee",
+      ];
+    
+      // Check if the provided 'order' parameter is in the allowedColumns list
+      if (!allowedColumns.includes(order)) {
+        return res.status(400).send("Invalid 'order' parameter.");
+      }
+    
+      // If the column name is valid, include it in the query
       query += ` ORDER BY "${order}"`;
-
+    
       if (desc === 'true') {
         query += ` DESC`;
       } else {
         query += ` ASC`;
       }
     }
+    
 
     if(offset && !isNaN(parseInt(offset))) {
       query += ` OFFSET ${parseInt(offset)}`
