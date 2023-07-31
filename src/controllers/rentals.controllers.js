@@ -24,20 +24,19 @@ function mapRentalData(rental) {
 
 
 export async function getRentals(req, res) {
-
-    const {customerId, gameId, offset, limit, order, desc} = req.query;
+  const { customerId, gameId, offset, limit, order, desc, status, startDate } = req.query;
 
   try {
     let query = `SELECT rentals.*, 
-    TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
-    TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
-    customers."name" as "customerName", 
-    games."name" as "gameName"
-    FROM rentals
-    JOIN customers ON rentals."customerId" = customers."id" 
-    JOIN games ON rentals."gameId" = games."id"`
+      TO_CHAR(rentals."rentDate", 'YYYY-MM-DD') AS "rentDate",
+      TO_CHAR(rentals."returnDate", 'YYYY-MM-DD') AS "returnDate", 
+      customers."name" as "customerName", 
+      games."name" as "gameName"
+      FROM rentals
+      JOIN customers ON rentals."customerId" = customers."id" 
+      JOIN games ON rentals."gameId" = games."id"`;
 
-    if(customerId) { 
+    if (customerId) {
       query += ` WHERE "customerId" = '${customerId}'`;
       const resultCustomerId = await db.query(query);
 
@@ -48,45 +47,42 @@ export async function getRentals(req, res) {
     if (gameId) {
       query += ` WHERE "gameId" = '${gameId}'`;
       const resultGameId = await db.query(query);
-      
+
       const rentalsGame = resultGameId.rows.map(mapRentalData);
       return res.send(rentalsGame);
     }
 
-    if (order) {
-      // Define a whitelist of allowed column names for sorting
-      const allowedColumns = [
-        "id",
-        "customerId",
-        "gameId",
-        "rentDate",
-        "daysRented",
-        "returnDate",
-        "originalPrice",
-        "delayFee",
-      ];
-    
-      // Check if the provided 'order' parameter is in the allowedColumns list
-      if (!allowedColumns.includes(order)) {
-        return res.status(400).send("Invalid 'order' parameter.");
+    if (status) {
+      if (status === "open") {
+        query += ` WHERE "returnDate" IS NULL`;
+      } else if (status === "closed") {
+        query += ` WHERE "returnDate" IS NOT NULL`;
       }
-    
-      // If the column name is valid, include it in the query
+    }
+
+    if (startDate) {
+      if (status || customerId || gameId) {
+        query += ` AND "rentDate" >= '${startDate}'`;
+      } else {
+        query += ` WHERE "rentDate" >= '${startDate}'`;
+      }
+    }
+
+    if (order) {
       query += ` ORDER BY "${order}"`;
-    
+
       if (desc === 'true') {
         query += ` DESC`;
       } else {
         query += ` ASC`;
       }
     }
-    
 
-    if(offset && !isNaN(parseInt(offset))) {
+    if (offset && !isNaN(parseInt(offset))) {
       query += ` OFFSET ${parseInt(offset)}`
     }
 
-    if(limit && !isNaN(parseInt(limit))) {
+    if (limit && !isNaN(parseInt(limit))) {
       query += ` LIMIT ${parseInt(limit)}`
     }
 
@@ -98,6 +94,7 @@ export async function getRentals(req, res) {
     return res.status(500).send(err.message)
   }
 }
+
 
 export async function postRental(req, res) {
 
