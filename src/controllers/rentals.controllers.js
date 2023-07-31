@@ -52,6 +52,16 @@ export async function getRentals(req, res) {
       return res.send(rentalsGame);
     }
 
+    if (order) {
+      query += ` ORDER BY rentals."${order}"`;
+
+      if (desc === 'true') {
+        query += ` DESC`;
+      } else {
+        query += ` ASC`;
+      }
+    }
+
     if (status) {
       if (status === "open") {
         query += ` WHERE "returnDate" IS NULL`;
@@ -65,16 +75,6 @@ export async function getRentals(req, res) {
         query += ` AND "rentDate" >= '${startDate}'`;
       } else {
         query += ` WHERE "rentDate" >= '${startDate}'`;
-      }
-    }
-
-    if (order) {
-      query += ` ORDER BY "${order}"`;
-
-      if (desc === 'true') {
-        query += ` DESC`;
-      } else {
-        query += ` ASC`;
       }
     }
 
