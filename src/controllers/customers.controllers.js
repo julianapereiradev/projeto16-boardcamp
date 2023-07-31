@@ -2,13 +2,24 @@ import { db } from "../database/database.connection.js";
  
   export async function getCustomers(req, res) {
 
-    const {cpf, offset, limit} = req.query;
+    const {cpf, offset, limit, order, desc} = req.query;
 
     try {
       let query = `SELECT id, name, phone, cpf, TO_CHAR(birthday, 'YYYY-MM-DD') AS birthday FROM customers`
 
       if(cpf) {
         query += ` WHERE cpf ILIKE '${cpf}%'`;
+      }
+
+      if (order) {
+            
+        query += ` ORDER BY "${order}"`;
+  
+        if (desc === 'true') {
+          query += ` DESC`;
+        } else {
+          query += ` ASC`;
+        }
       }
 
       if(offset && !isNaN(parseInt(offset))) {

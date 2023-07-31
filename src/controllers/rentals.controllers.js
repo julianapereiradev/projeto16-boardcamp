@@ -25,7 +25,7 @@ function mapRentalData(rental) {
 
 export async function getRentals(req, res) {
 
-    const {customerId, gameId, offset, limit} = req.query;
+    const {customerId, gameId, offset, limit, order, desc} = req.query;
 
   try {
     let query = `SELECT rentals.*, 
@@ -51,6 +51,17 @@ export async function getRentals(req, res) {
       
       const rentalsGame = resultGameId.rows.map(mapRentalData);
       return res.send(rentalsGame);
+    }
+
+    if (order) {
+            
+      query += ` ORDER BY "${order}"`;
+
+      if (desc === 'true') {
+        query += ` DESC`;
+      } else {
+        query += ` ASC`;
+      }
     }
 
     if(offset && !isNaN(parseInt(offset))) {
