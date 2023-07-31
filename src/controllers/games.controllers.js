@@ -11,12 +11,13 @@ export async function getGames(req, res) {
     }
 
     if (order) {
-      // Sanitize the 'order' parameter to prevent SQL injection
-      const sanitizedOrder = order === 'name' ? 'name' : 'id';
-      query += ` ORDER BY "${sanitizedOrder}"`;
+            
+      query += ` ORDER BY "${order}"`;
 
       if (desc === 'true') {
         query += ` DESC`;
+      } else {
+        query += ` ASC`;
       }
     }
 
